@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 module.exports = {
   content: [
     "./src/**/*.{js,jsx,ts,tsx}",
@@ -6,10 +6,9 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'sans-serif'], // Set Poppins as the default sans-serif font
+        sans: ['Poppins', 'sans-serif'],
       },
     },
   },
   plugins: [],
 }
-
