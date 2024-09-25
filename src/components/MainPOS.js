@@ -25,7 +25,23 @@ const MainPOS = ({ addOrder }) => {
         } else {
             setCart([...cart, { ...product, quantity }]);
         }
+
+        // Show SweetAlert notification without dimming the background
+        Swal.fire({
+            toast: true,               // Enable toast mode
+            position: 'top-end',       // Position at the top right corner
+            icon: 'success',           // Success icon
+            title: `${product.name} added to cart!`, // Notification message
+            showConfirmButton: false,  // No confirm button
+            timer: 1500,               // Duration to display the notification
+            timerProgressBar: true,    // Show timer progress bar
+            background: '#fff',        // Optional: set background color
+            customClass: {
+                popup: 'swal-custom'   // Optional: custom class for styling
+            }
+        });
     };
+
 
     const removeFromCart = (productId) => {
         setCart(cart.filter(item => item.id !== productId));
