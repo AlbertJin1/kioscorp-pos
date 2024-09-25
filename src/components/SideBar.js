@@ -2,11 +2,15 @@
 import React, { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
 
-const Sidebar = ({ orders }) => {
+const Sidebar = ({ orders, setOrders }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handlePaid = (orderNumber) => {
+    setOrders(orders.filter(order => order.orderNumber !== orderNumber));
   };
 
   return (
@@ -35,6 +39,14 @@ const Sidebar = ({ orders }) => {
                     </div>
                   ))}
                   <p className="text-gray-400 mt-2">Total Items: {order.cart.reduce((sum, item) => sum + item.quantity, 0)}</p>
+
+                  {/* Paid Button */}
+                  <button 
+                    className="bg-green-500 text-white px-2 py-1 mt-2 rounded"
+                    onClick={() => handlePaid(order.orderNumber)}
+                  >
+                    Paid
+                  </button>
                 </li>
               ))
             )}

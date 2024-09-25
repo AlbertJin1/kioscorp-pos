@@ -50,7 +50,7 @@ const MainComponent = () => {
 
       <div className="flex flex-grow">
         {/* Sidebar */}
-        <Sidebar orders={orders} />
+        <Sidebar orders={orders} setOrders={setOrders} />
 
         {/* Main Content */}
         <main className="flex-grow flex flex-col p-4 bg-gray-100">

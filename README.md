@@ -74,3 +74,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 - npm install react-router-dom
 - npm install -D tailwindcss postcss autoprefixer
 - npx tailwindcss init -p
+- npm install react-icons
