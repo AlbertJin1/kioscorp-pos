@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 
 const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
     const dummyProducts = [
-        { id: 1, name: 'Bolts', type: 'Type A', size: 'Medium', price: 500, image: 'https://via.placeholder.com/100' },
+        { id: 1, name: 'Bolts', type: 'Type A', size: 'Medium', price: 500, image: 'https://4.img-dpreview.com/files/p/E~TS590x0~articles/3925134721/0266554465.jpeg' },
         { id: 2, name: 'Screw', type: 'Type B', size: 'Large', price: 750, image: 'https://via.placeholder.com/100' },
         { id: 3, name: 'Nuts', type: 'Type C', size: 'Small', price: 1000, image: 'https://via.placeholder.com/100' },
         { id: 4, name: 'Washers', type: 'Type D', size: 'Small', price: 200, image: 'https://via.placeholder.com/100' },
@@ -206,7 +206,7 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 220px)' }}>
                         {filteredProducts.map((product) => (
                             <div key={product.id} className="border p-4 rounded-lg flex flex-col items-center space-y-4">
-                                <img src={product.image} alt={product.name} className="w-16 h-16" />
+                                <img src={product.image} alt={product.name} className="w-32 h-32 object-cover object-center" />
                                 <div className="text-center">
                                     <p className="font-semibold">{product.name}</p>
                                     <p>{product.type} - {product.size}</p>
