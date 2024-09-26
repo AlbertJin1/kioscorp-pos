@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 
-const MainPOS = ({ addOrder }) => {
+const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
     const dummyProducts = [
         { id: 1, name: 'Bolts', type: 'Type A', size: 'Medium', price: 500, image: 'https://via.placeholder.com/100' },
         { id: 2, name: 'Screw', type: 'Type B', size: 'Large', price: 750, image: 'https://via.placeholder.com/100' },
@@ -16,7 +16,17 @@ const MainPOS = ({ addOrder }) => {
     ];
 
     const [cart, setCart] = useState([]);
-    const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+    const [productQuantities, setProductQuantities] = useState({});
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+
+    useEffect(() => {
+        if (selectedOrder) {
+            setCart(selectedOrder.cart);
+        } else {
+            setCart([]);
+        }
+    }, [selectedOrder]);
 
     const addToCart = (product, quantity) => {
         const existingProduct = cart.find(item => item.id === product.id);
@@ -26,31 +36,63 @@ const MainPOS = ({ addOrder }) => {
             setCart([...cart, { ...product, quantity }]);
         }
 
-        // Show SweetAlert notification without dimming the background
         Swal.fire({
-            toast: true,               // Enable toast mode
-            position: 'top-end',       // Position at the top right corner
-            icon: 'success',           // Success icon
-            title: `${product.name} added to cart!`, // Notification message
-            showConfirmButton: false,  // No confirm button
-            timer: 1500,               // Duration to display the notification
-            timerProgressBar: true,    // Show timer progress bar
-            background: '#fff',        // Optional: set background color
-            customClass: {
-                popup: 'swal-custom'   // Optional: custom class for styling
-            }
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `${product.name} added to cart!`,
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
         });
     };
 
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleCategoryChange = (e) => {
+        setSelectedCategory(e.target.value);
+    };
+
+    const handleQuantityChange = (e, productId) => {
+        const value = parseInt(e.target.value, 10);
+        setProductQuantities({
+            ...productQuantities,
+            [productId]: value > 0 ? value : 1,
+        });
+    };
+
+    const filteredProducts = dummyProducts.filter(product => {
+        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     const removeFromCart = (productId) => {
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'error',
+            title: 'Product removed from cart!',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
+
         setCart(cart.filter(item => item.id !== productId));
     };
 
-    const handleVoid = () => {
+    const updateCartQuantity = (productId, newQuantity) => {
+        setCart(cart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
+    };
+
+    const handleVoidOrder = () => {
+        if (!selectedOrder) return; // Ensure an order is selected before voiding
+
         Swal.fire({
             title: 'Are you sure?',
-            text: "This will clear your current cart!",
+            text: `This will void Order #${selectedOrder.orderNumber}!`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
@@ -58,10 +100,11 @@ const MainPOS = ({ addOrder }) => {
             confirmButtonText: 'Yes, void it!'
         }).then((result) => {
             if (result.isConfirmed) {
-                setCart([]); // Clear current cart
+                voidOrder(selectedOrder.orderNumber); // Call voidOrder function passed from MainComponent
+                setCart([]); // Clear the current cart
                 Swal.fire({
                     title: 'Voided!',
-                    text: 'Your cart has been cleared.',
+                    text: `Order #${selectedOrder.orderNumber} has been voided.`,
                     icon: 'success',
                     timer: 2000,
                     showConfirmButton: false
@@ -82,8 +125,10 @@ const MainPOS = ({ addOrder }) => {
             return;
         }
 
-        addOrder(cart);
-        setCart([]); // Clear the cart for the new order
+        addOrder(cart); // Call addOrder passed from MainComponent with the cart
+        setCart([]); // Clear cart for the new order
+
+        // Notify user
         Swal.fire({
             title: 'Order Created!',
             text: 'Your new order has been successfully created.',
@@ -93,31 +138,76 @@ const MainPOS = ({ addOrder }) => {
         });
     };
 
+    const handleUpdateOrder = () => {
+        if (cart.length === 0) {
+            Swal.fire({
+                title: 'Cart is empty!',
+                text: 'Add products before updating the order.',
+                icon: 'error',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
+
+        updateOrder(selectedOrder.orderNumber, cart); // Call updateOrder with the selected order number and updated cart
+
+        // Notify user
+        Swal.fire({
+            title: 'Order Updated!',
+            text: `Order #${selectedOrder.orderNumber} has been updated successfully.`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
     const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
 
-    useEffect(() => {
-        const handleResize = () => setWindowHeight(window.innerHeight);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
     return (
-        <div className="flex flex-col w-full h-screen box-border">
+        <div className="flex flex-col w-full h-full box-border">
             {/* Order Number */}
             <div className="bg-white p-4 shadow-lg">
-                <h2 className="text-xl font-semibold">Current Order</h2>
+                <h2 className="text-xl font-semibold">
+                    {selectedOrder ? `Order #${selectedOrder.orderNumber}` : 'New Order'}
+                </h2>
             </div>
 
             {/* Product List and Payment Summary */}
             <div className="flex flex-col lg:flex-row lg:space-x-4 flex-grow p-4 overflow-hidden">
                 {/* Product List */}
-                <div className="flex-grow bg-white p-4 rounded-lg shadow-lg mb-4 lg:mb-0 overflow-y-auto" style={{ maxHeight: `calc(${windowHeight}px - 100px)` }}>
-                    <h2 className="text-xl font-semibold mb-4">Products</h2>
-                    <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-                        {dummyProducts.map((product) => (
-                            <div key={product.id} className="border p-4 rounded-lg flex items-center space-x-4">
+                <div className="flex-grow bg-white p-4 rounded-lg shadow-lg mb-4 lg:mb-0 overflow-hidden">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold">Products</h2>
+
+                        {/* Search and Category Filter */}
+                        <div className="flex space-x-4 items-center">
+                            <input
+                                type="text"
+                                placeholder="Search product..."
+                                value={searchTerm}
+                                onChange={handleSearch}
+                                className="border p-2 rounded"
+                            />
+                            <select
+                                value={selectedCategory}
+                                onChange={handleCategoryChange}
+                                className="border p-2 rounded"
+                            >
+                                <option value="All">All Categories</option>
+                                <option value="Hardware">Hardware</option>
+                                <option value="Tools">Tools</option>
+                                {/* Add more categories as needed */}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Product Grid with Custom Scrollbar */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+                        {filteredProducts.map((product) => (
+                            <div key={product.id} className="border p-4 rounded-lg flex flex-col items-center space-y-4">
                                 <img src={product.image} alt={product.name} className="w-16 h-16" />
-                                <div className="flex-grow">
+                                <div className="text-center">
                                     <p className="font-semibold">{product.name}</p>
                                     <p>{product.type} - {product.size}</p>
                                     <p>₱{product.price.toFixed(2)}</p>
@@ -125,14 +215,14 @@ const MainPOS = ({ addOrder }) => {
                                 <div className="flex items-center">
                                     <input
                                         type="number"
-                                        defaultValue={1}
+                                        value={productQuantities[product.id] || 1}
                                         min={1}
                                         className="w-16 border rounded p-1 text-center"
-                                        id={`quantity-${product.id}`}
+                                        onChange={(e) => handleQuantityChange(e, product.id)}
                                     />
                                     <button
                                         className="bg-blue-500 text-white px-2 py-1 rounded ml-2"
-                                        onClick={() => addToCart(product, parseInt(document.getElementById(`quantity-${product.id}`).value))}
+                                        onClick={() => addToCart(product, productQuantities[product.id] || 1)}
                                     >
                                         Add
                                     </button>
@@ -142,47 +232,58 @@ const MainPOS = ({ addOrder }) => {
                     </div>
                 </div>
 
-                {/* Payment Summary */}
+                {/* Payment Summary with Custom Scrollbar */}
                 <div className="bg-white p-4 rounded-lg shadow-lg lg:w-1/3 xl:w-1/4 flex flex-col">
-                    <h2 className="text-2xl font-semibold mb-4">Payment Summary</h2>
-                    <div className="flex-grow overflow-y-auto" style={{ maxHeight: `calc(${windowHeight}px - 400px)` }}>
-                        {cart.length === 0 ? (
-                            <p className="text-gray-500 text-lg">No items in cart.</p>
-                        ) : (
+                    <h2 className="text-2xl font-semibold mb-4">
+                        {selectedOrder ? `Payment Summary for Order #${selectedOrder.orderNumber}` : 'Payment Summary'}
+                    </h2>
+                    <div className="flex-grow overflow-y-auto custom-scrollbar">
+                        {cart.length > 0 ? (
                             cart.map((item, index) => (
                                 <div key={index} className="mb-2 text-lg flex justify-between items-center">
                                     <div>
                                         <p>{item.name} - ₱{item.price.toFixed(2)}</p>
-                                        <p>Unit Price: ₱{item.price.toFixed(2)} x {item.quantity}</p>
+                                        <div className="flex items-center">
+                                            <p>Unit Price: ₱{item.price.toFixed(2)} x </p>
+                                            <input
+                                                type="number"
+                                                value={item.quantity}
+                                                min={1}
+                                                onChange={(e) => updateCartQuantity(item.id, parseInt(e.target.value))}
+                                                className="ml-2 w-16 border rounded p-1 text-center"
+                                            />
+                                        </div>
                                         <p className="font-semibold">Total: ₱{(item.price * item.quantity).toFixed(2)}</p>
                                     </div>
-                                    <button
-                                        className="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center ml-4"
-                                        onClick={() => removeFromCart(item.id)}
-                                    >
-                                        X
-                                    </button>
+                                    <button className="text-red-500" onClick={() => removeFromCart(item.id)}>Remove</button>
                                 </div>
                             ))
+                        ) : (
+                            <p>No items in cart.</p>
                         )}
                     </div>
-                    {cart.length > 0 && (
-                        <div className="mt-4">
-                            <p className="font-semibold text-2xl">Grand Total: ₱{totalPrice.toFixed(2)}</p>
-                            <button
-                                className="bg-green-500 text-white px-4 py-2 mt-4 rounded-lg w-full"
-                                onClick={handleNewOrder}
-                            >
-                                Create New Order
-                            </button>
-                            <button
-                                className="bg-yellow-500 text-white px-4 py-2 mt-2 rounded-lg w-full"
-                                onClick={handleVoid}
-                            >
-                                Void
-                            </button>
-                        </div>
-                    )}
+                    <div className="flex justify-between mt-4">
+                        <h3 className="font-semibold">Total:</h3>
+                        <h3 className="font-semibold">₱{totalPrice.toFixed(2)}</h3>
+                    </div>
+                    <div className="flex justify-between mt-4">
+                        {selectedOrder ? (
+                            <>
+                                <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={handleUpdateOrder}>
+                                    Update Order
+                                </button>
+                                <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={handleVoidOrder}>
+                                    Void Order
+                                </button>
+                            </>
+                        ) : (
+                            cart.length > 0 && (
+                                <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={handleNewOrder}>
+                                    New Order
+                                </button>
+                            )
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

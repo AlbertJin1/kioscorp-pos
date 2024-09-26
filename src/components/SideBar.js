@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
 import { FaBars } from 'react-icons/fa';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2';
 
-const Sidebar = ({ orders, setOrders }) => {
+const Sidebar = ({ orders, setOrders, onSelectOrder }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [selectedOrderNumber, setSelectedOrderNumber] = useState(null);
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+
+  // Handle toggling of order selection
+  const handleSelectOrder = (order) => {
+    if (selectedOrderNumber === order.orderNumber) {
+      // If the order is already selected, deselect it (toggle behavior)
+      setSelectedOrderNumber(null);
+      onSelectOrder(null); // Deselect in MainPOS as well
+    } else {
+      // Otherwise, select the new order
+      setSelectedOrderNumber(order.orderNumber);
+      onSelectOrder(order);
+    }
   };
 
   const handlePaid = (orderNumber) => {
@@ -33,7 +47,7 @@ const Sidebar = ({ orders, setOrders }) => {
   };
 
   return (
-    <aside className={`bg-gray-800 text-white transition-all duration-300 ${isOpen ? 'w-64' : 'w-14'} h-screen flex flex-col p-4`}>
+    <aside className={`bg-gray-800 text-white transition-all duration-300 ${isOpen ? 'w-64' : 'w-14'} h-screen flex flex-col p-4 sidebar`}>
       <div className="flex items-center mb-6">
         <button onClick={toggleSidebar} className="text-white text-2xl focus:outline-none mr-2">
           <FaBars />
@@ -48,7 +62,11 @@ const Sidebar = ({ orders, setOrders }) => {
               <li className="text-center">No Orders Yet.</li>
             ) : (
               orders.map((order) => (
-                <li key={order.orderNumber} className="bg-gray-700 p-3 rounded-lg">
+                <li
+                  key={order.orderNumber}
+                  className={`bg-gray-700 p-3 rounded-lg cursor-pointer ${selectedOrderNumber === order.orderNumber ? 'bg-green-700' : ''}`}
+                  onClick={() => handleSelectOrder(order)}
+                >
                   <h3 className="font-semibold">Order #{order.orderNumber}</h3>
                   {order.cart.map((item, i) => (
                     <div key={i} className="text-sm text-gray-300">
@@ -71,7 +89,7 @@ const Sidebar = ({ orders, setOrders }) => {
           </ul>
         ) : (
           <ul className="flex flex-col items-center mt-4 space-y-2">
-            <li className="text-center text-xl font-semibold">OL</li> {/* Display "OL" here */}
+            <li className="text-center text-xl font-semibold">OL</li>
             {orders.map((order) => (
               <li key={order.orderNumber} className="text-center text-2xl">
                 {order.orderNumber}

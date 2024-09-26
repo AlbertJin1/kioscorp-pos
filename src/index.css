@@ -54,7 +54,21 @@ code {
   background: transparent;
 }
 
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
 
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4A5568;
+  /* Darker scrollbar thumb color */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #EDF2F7;
+  /* Lighter scrollbar track color */
+}
 
 
 @tailwind base;
