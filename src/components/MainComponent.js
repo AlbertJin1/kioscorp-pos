@@ -4,45 +4,48 @@ import SideBar from './SideBar';
 import TopBar from './TopBar'; // Import your TopBar component
 
 const MainComponent = () => {
-  // Initialize orders as an empty array
   const [orders, setOrders] = useState([]);
   const [orderNumber, setOrderNumber] = useState(1);
-  const [selectedOrder, setSelectedOrder] = useState(null); // Start with null for clarity
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const addOrder = (cart) => {
-    const newOrder = { orderNumber, cart };
-    setOrders([...orders, newOrder]); // Add the new order to the orders array
+  const addOrder = (cart, paymentMethod) => {
+    const newOrder = { orderNumber, cart, paymentMethod };
+    setOrders([...orders, newOrder]);
     setOrderNumber(orderNumber + 1);
-    console.log('New Order Added:', newOrder); // Add this line to check if new order is added
+    console.log('New Order Added:', newOrder);
   };
 
-  // Function to handle selecting an order
+
   const onSelectOrder = (order) => {
-    if (order) { // Check if the order exists
-      setSelectedOrder(order); // Set the whole order object
-    } else {
-      setSelectedOrder(null); // Set to null if the order is invalid
-    }
+    setSelectedOrder(order ? order : null);
   };
 
-  const updateOrder = (orderNumber, updatedCart) => {
+  const updateOrder = (orderNumber, updatedCart, updatedPaymentMethod) => {
     setOrders(orders.map(order =>
-      order.orderNumber === orderNumber ? { ...order, cart: updatedCart } : order
+      order.orderNumber === orderNumber
+        ? { ...order, cart: updatedCart, paymentMethod: updatedPaymentMethod } // Update payment method
+        : order
     ));
   };
 
+
   const voidOrder = (orderNumber) => {
     setOrders(orders.filter(order => order.orderNumber !== orderNumber));
+    if (selectedOrder && selectedOrder.orderNumber === orderNumber) {
+      setSelectedOrder(null); // Clear selectedOrder if it's the one being voided
+    }
   };
 
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <SideBar orders={orders} setOrders={setOrders} onSelectOrder={onSelectOrder} />
+      {/* Pass voidOrder to SideBar */}
+      <SideBar orders={orders} setOrders={setOrders} onSelectOrder={onSelectOrder} voidOrder={voidOrder} />
       <div className="flex flex-col flex-grow">
         <TopBar orders={orders} selectedOrder={selectedOrder} />
         <div className="flex-grow overflow-auto">
           <MainPOS addOrder={addOrder} selectedOrder={selectedOrder} updateOrder={updateOrder} voidOrder={voidOrder} />
+
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
     const dummyProducts = [
         { id: 1, name: 'Bolts', type: 'Type A', size: 'Medium', price: 500, image: 'https://4.img-dpreview.com/files/p/E~TS590x0~articles/3925134721/0266554465.jpeg' },
-        { id: 2, name: 'Screw', type: 'Type B', size: 'Large', price: 750, image: 'https://via.placeholder.com/100' },
+        { id: 2, name: 'Screw', type: 'Type B', size: 'Large', price: 750, image: 'https://cdn.explorecams.com/storage/photos/LEFEikw0MR_1600.jpg' },
         { id: 3, name: 'Nuts', type: 'Type C', size: 'Small', price: 1000, image: 'https://via.placeholder.com/100' },
         { id: 4, name: 'Washers', type: 'Type D', size: 'Small', price: 200, image: 'https://via.placeholder.com/100' },
         { id: 5, name: 'Anchors', type: 'Type E', size: 'Medium', price: 600, image: 'https://via.placeholder.com/100' },
@@ -12,19 +12,26 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
         { id: 7, name: 'Studs', type: 'Type G', size: 'Medium', price: 400, image: 'https://via.placeholder.com/100' },
         { id: 8, name: 'Self-tapping Screws', type: 'Type H', size: 'Small', price: 300, image: 'https://via.placeholder.com/100' },
         { id: 9, name: 'Lag Screws', type: 'Type I', size: 'Large', price: 900, image: 'https://via.placeholder.com/100' },
-        { id: 10, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
+        { id: 11, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
+        { id: 12, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
+        { id: 13, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
+        { id: 14, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
+        { id: 15, name: 'Hex Bolts', type: 'Type J', size: 'Medium', price: 650, image: 'https://via.placeholder.com/100' },
     ];
 
     const [cart, setCart] = useState([]);
     const [productQuantities, setProductQuantities] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [paymentMethod, setPaymentMethod] = useState('');
 
     useEffect(() => {
         if (selectedOrder) {
             setCart(selectedOrder.cart);
+            setPaymentMethod(selectedOrder.paymentMethod || ''); // Sync the payment method
         } else {
             setCart([]);
+            setPaymentMethod(''); // Reset payment method
         }
     }, [selectedOrder]);
 
@@ -87,32 +94,7 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
         setCart(cart.map(item => item.id === productId ? { ...item, quantity: newQuantity } : item));
     };
 
-    const handleVoidOrder = () => {
-        if (!selectedOrder) return; // Ensure an order is selected before voiding
-
-        Swal.fire({
-            title: 'Are you sure?',
-            text: `This will void Order #${selectedOrder.orderNumber}!`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, void it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                voidOrder(selectedOrder.orderNumber); // Call voidOrder function passed from MainComponent
-                setCart([]); // Clear the current cart
-                Swal.fire({
-                    title: 'Voided!',
-                    text: `Order #${selectedOrder.orderNumber} has been voided.`,
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            }
-        });
-    };
-
+    // Add order, void order, or update order should reset the payment method to default
     const handleNewOrder = () => {
         if (cart.length === 0) {
             Swal.fire({
@@ -125,10 +107,20 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
             return;
         }
 
-        addOrder(cart); // Call addOrder passed from MainComponent with the cart
-        setCart([]); // Clear cart for the new order
+        if (!paymentMethod) {
+            Swal.fire({
+                title: 'No Payment Method Selected!',
+                text: 'Please select a payment method before proceeding.',
+                icon: 'warning',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return; // Stop order creation if no payment method is selected
+        }
 
-        // Notify user
+        addOrder(cart, paymentMethod);
+        setCart([]);
+        setPaymentMethod(''); // Reset the payment method
         Swal.fire({
             title: 'Order Created!',
             text: 'Your new order has been successfully created.',
@@ -137,6 +129,7 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
             showConfirmButton: false
         });
     };
+
 
     const handleUpdateOrder = () => {
         if (cart.length === 0) {
@@ -150,9 +143,19 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
             return;
         }
 
-        updateOrder(selectedOrder.orderNumber, cart); // Call updateOrder with the selected order number and updated cart
+        if (!paymentMethod) {
+            Swal.fire({
+                title: 'No Payment Method Selected!',
+                text: 'Please select a payment method before updating the order.',
+                icon: 'warning',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            return;
+        }
 
-        // Notify user
+        // Update the order with the new cart and payment method
+        updateOrder(selectedOrder.orderNumber, cart, paymentMethod); // Pass the payment method when updating
         Swal.fire({
             title: 'Order Updated!',
             text: `Order #${selectedOrder.orderNumber} has been updated successfully.`,
@@ -178,7 +181,7 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
                 {/* Product List */}
                 <div className="flex-grow bg-white p-4 rounded-lg shadow-lg mb-4 lg:mb-0 overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">Products</h2>
+                        <h2 className="text-2xl font-semibold">Products</h2>
 
                         {/* Search and Category Filter */}
                         <div className="flex space-x-4 items-center">
@@ -203,10 +206,11 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
                     </div>
 
                     {/* Product Grid with Custom Scrollbar */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 overflow-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 220px)' }}>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 245px)' }}>
+
                         {filteredProducts.map((product) => (
                             <div key={product.id} className="border p-4 rounded-lg flex flex-col items-center space-y-4">
-                                <img src={product.image} alt={product.name} className="w-32 h-32 object-cover object-center" />
+                                <img src={product.image} alt={product.name} className="w-52 h-52 object-cover object-center" />
                                 <div className="text-center">
                                     <p className="font-semibold">{product.name}</p>
                                     <p>{product.type} - {product.size}</p>
@@ -266,19 +270,30 @@ const MainPOS = ({ selectedOrder, addOrder, updateOrder, voidOrder }) => {
                         <h3 className="font-semibold">Total:</h3>
                         <h3 className="font-semibold">₱{totalPrice.toFixed(2)}</h3>
                     </div>
+                    {/* Payment Method Dropdown */}
+                    <div className="mt-4">
+                        <label htmlFor="payment-method" className="font-semibold mb-2 block">Payment Method</label>
+                        <select
+                            id="payment-method"
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="w-full border p-2 rounded"
+                        >
+                            <option value="" disabled>Select Payment Method</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Gcash">Gcash</option>
+                            <option value="Card">Card</option>
+                            <option value="Bank">Bank</option>
+                        </select>
+                    </div>
                     <div className="flex justify-between mt-4">
                         {selectedOrder ? (
-                            <>
-                                <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={handleUpdateOrder}>
-                                    Update Order
-                                </button>
-                                <button className="bg-red-500 text-white px-4 py-2 rounded" onClick={handleVoidOrder}>
-                                    Void Order
-                                </button>
-                            </>
+                            <button className="bg-yellow-500 text-white px-4 py-2 rounded w-full" onClick={handleUpdateOrder}>
+                                Update Order
+                            </button>
                         ) : (
                             cart.length > 0 && (
-                                <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={handleNewOrder}>
+                                <button className="bg-green-500 text-white px-4 py-2 rounded w-full" onClick={handleNewOrder}>
                                     New Order
                                 </button>
                             )

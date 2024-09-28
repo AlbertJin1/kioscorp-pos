@@ -77,3 +77,4 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/t
 - npm install react-icons
 - npm install --save-dev @babel/plugin-proposal-private-property-in-object
 - npm install sweetalert2
+- npm install react-modal
